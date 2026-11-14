@@ -135,6 +135,14 @@ AGENT_TEST_TASKS.extend(
             "prompt": "Find a tree return two metres below a conductor. Use the bundled synthetic "
             "inputs and return the columns and ordering shown in its catalog example.",
         },
+        {
+            "name": "gis_corridor_screen",
+            "prompt": "Screen the bundled synthetic power-line corridor. Using the bundled site polygon, "
+            "find the maximum canopy height inside it; using the bundled conductor, count the vegetation "
+            "returns within 15 metres of the line and find the closest one. Return one row with columns "
+            "canopy_max_m (DOUBLE), returns_within_15m (BIGINT) and closest_clearance_m (DOUBLE, rounded "
+            "to 2 decimals).",
+        },
     ]
 )
 

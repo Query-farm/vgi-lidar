@@ -392,6 +392,30 @@ CLEAR_SQL = (
     "'conductor'))) ORDER BY feature_id, point_index"
 )
 
+# Composed examples: each combines several of this worker's functions in one query.
+SPAN_REPORT_SQL = (
+    "WITH spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), "
+    "canopy AS (SELECT feature_id, canopy_max_m, canopy_cover_fraction FROM "
+    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), "
+    "returns AS (SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m, "
+    "count(*) AS within_12m, min(clearance_m) AS closest_m FROM "
+    "lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), "
+    "clearance_m := 12) GROUP BY feature_id) "
+    "SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover, "
+    "coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m, "
+    "round(r.closest_m, 2) AS closest_m FROM spans s JOIN canopy c ON c.feature_id = s.corridor_id "
+    "LEFT JOIN returns r ON r.feature_id = s.conductor_id ORDER BY s.span_id"
+)
+TALL_CANOPY_SQL = (
+    "WITH any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM "
+    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), "
+    "tall AS (SELECT feature_id, canopy_cover_fraction AS cover_15m FROM "
+    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), canopy_height_m := 15)) "
+    "SELECT feature_id, round(cover_2m, 3) AS cover_2m, round(cover_15m, 3) AS cover_15m, "
+    "round(cover_15m / cover_2m, 2) AS tall_share FROM any_canopy JOIN tall USING (feature_id) "
+    "ORDER BY feature_id"
+)
+
 
 class HeightMetrics(TableInOutGenerator[CloudArgs]):
     """Summarize classified building and vegetation points within polygon rows."""
@@ -415,7 +439,12 @@ class HeightMetrics(TableInOutGenerator[CloudArgs]):
             HEIGHT_SQL,
             [["site", 11.9, 18.0]],
         )
-        examples = example(HEIGHT_SQL, "Estimate heights above a known flat ground surface")
+        examples = example(HEIGHT_SQL, "Estimate heights above a known flat ground surface") + example(
+            TALL_CANOPY_SQL,
+            "Run height_metrics twice over the bundled site, at the default 2 m and at a 15 m canopy "
+            "threshold, and join the results: canopy cover is 0.077 and 0.038, so half of the canopy "
+            "cells hold vegetation at least 15 m tall",
+        )
 
     @classmethod
     def on_bind(cls, params: BindParams[CloudArgs]) -> BindResponse:
@@ -456,7 +485,12 @@ class VegetationClearance(TableInOutGenerator[CloudArgs]):
             CLEAR_SQL,
             [["line", 2.0]],
         )
-        examples = example(CLEAR_SQL, "Find a tree return two metres below a conductor")
+        examples = example(CLEAR_SQL, "Find a tree return two metres below a conductor") + example(
+            SPAN_REPORT_SQL,
+            "Span vegetation report: join canopy height and cover from height_metrics over the "
+            "right-of-way polygon with vegetation_clearance returns along the conductor (12 m search); "
+            "Span 7 has 18 m canopy, one return within 3 m, two within 12 m, the closest at 2 m",
+        )
 
     @classmethod
     def on_bind(cls, params: BindParams[CloudArgs]) -> BindResponse:

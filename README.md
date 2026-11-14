@@ -55,6 +55,28 @@ FROM lidar.main.height_metrics(
 ORDER BY feature_id;
 ```
 
+The two analyses combine per span: canopy over the right-of-way polygon from `height_metrics`, encroaching returns along the conductor from `vegetation_clearance`. On the bundled data this returns `Span 7 | 18.0 | 0.077 | 1 | 2 | 2.0`:
+
+```sql
+WITH spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')),
+canopy AS (
+    SELECT feature_id, canopy_max_m, canopy_cover_fraction
+    FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))),
+returns AS (
+    SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m,
+           count(*) AS within_12m, min(clearance_m) AS closest_m
+    FROM lidar.main.vegetation_clearance(
+        (SELECT * FROM lidar.main.demo_input(kind := 'conductor')), clearance_m := 12)
+    GROUP BY feature_id)
+SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover,
+       coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m,
+       round(r.closest_m, 2) AS closest_m
+FROM spans s
+JOIN canopy c ON c.feature_id = s.corridor_id
+LEFT JOIN returns r ON r.feature_id = s.conductor_id
+ORDER BY s.span_id;
+```
+
 WKB is an ordinary SQL BLOB with an explicit companion CRS, not an automatically transformed geometry. Use `ST_AsWKB` on input and `ST_GeomFromWKB` on output when using Spatial. Coordinates always use X/Y order. Do not join different coordinate systems without transforming them. Input IDs are retained as VARCHAR for joins. Invalid input schemas, geometries, coordinates and exceeded resource limits fail explicitly.
 
 ## Verification and provenance

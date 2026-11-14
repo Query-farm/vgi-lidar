@@ -23,3 +23,10 @@ tasks:
 
   - name: gis_vegetation_clearance
     reference_sql: "SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index"
+
+  # Composed: height_metrics over the site polygon plus vegetation_clearance along the conductor.
+  - name: gis_corridor_screen
+    reference_sql: >-
+      SELECT (SELECT canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))) AS canopy_max_m,
+      count(*) AS returns_within_15m, round(min(clearance_m), 2) AS closest_clearance_m
+      FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), clearance_m := 15)
