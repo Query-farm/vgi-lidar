@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "catalog_sha256": "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+        "notes": "Actual complete functions/tables/views exports include main and examples schemas. Six named surfaces; greet overloads count once. Optional authentication on fetch_items is retained. Current and release source revisions are identical."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617",
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "catalog_sha256": "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617",
+        "notes": "Actual complete functions/tables/views exports include main and examples schemas. Six named surfaces; greet overloads count once. Optional authentication on fetch_items is retained. Current and release source revisions are identical."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "02_paginated_inventory_report.ipynb",
+      "sha256": "d15c02c9531912aae96ab89e1951472274aa2991b079f06341d9b93824b5c6a2",
+      "execution": {
+        "path": "coverage/run-02.json",
+        "sha256": "daa36088f5c909e0e9916df4efa521c3d96426330da6dd5effad172fb7b83d73"
+      }
+    },
+    {
+      "path": "01_height_support_changes_the_population.ipynb",
+      "sha256": "15d27f04b0398089b4d0e626f54ad20cb7ede683abfdd965c0775a553b73a92d",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "baa702b4fd047d76c1bc1f59bbd771dadbbbe6b6e436a20b4f23b709d6ce1d21"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "demo_input"
+      },
+      "notebook": "01_height_support_changes_the_population.ipynb",
+      "sql": [
+        {
+          "cell": "b1a74f59",
+          "reference": "lidar.main.demo_input"
+        }
+      ],
+      "narrative_cells": [
+        "27ed84d3"
+      ],
+      "result_cells": [
+        "04b672dc"
+      ],
+      "interpretation_cells": [
+        "28bee413"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "notebook_sha256": "15d27f04b0398089b4d0e626f54ad20cb7ede683abfdd965c0775a553b73a92d",
+        "catalog_sha256": [
+          "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+          "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617"
+        ],
+        "purpose": "Use the bundled site polygon and 3D conductor as two distinct geometrical inputs over one synthetic classified cloud.",
+        "finding": "The site defines the 100-cell height-summary population; the conductor at 120 m defines independent absolute clearances. Neither geometry is inferred from the cloud."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "height_metrics"
+      },
+      "notebook": "01_height_support_changes_the_population.ipynb",
+      "sql": [
+        {
+          "cell": "b1a74f59",
+          "reference": "lidar.main.height_metrics"
+        }
+      ],
+      "narrative_cells": [
+        "c8bbf6eb"
+      ],
+      "result_cells": [
+        "04b672dc"
+      ],
+      "interpretation_cells": [
+        "04b672dc"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "notebook_sha256": "15d27f04b0398089b4d0e626f54ad20cb7ede683abfdd965c0775a553b73a92d",
+        "catalog_sha256": [
+          "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+          "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617"
+        ],
+        "purpose": "Test whether tightening ground support changes canopy statistics by changing the contributing population.",
+        "finding": "The 29 returns and 26 observed cells stay fixed. Radius 25 \u2192 2 m excludes one vegetation return, raises canopy p95 from 17.6 \u2192 18 m and changes canopy cover from 2/26 \u2192 1/25. Missing support remains explicit."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "vegetation_clearance"
+      },
+      "notebook": "01_height_support_changes_the_population.ipynb",
+      "sql": [
+        {
+          "cell": "b1a74f59",
+          "reference": "lidar.main.vegetation_clearance"
+        }
+      ],
+      "narrative_cells": [
+        "e00bc3ac"
+      ],
+      "result_cells": [
+        "28bee413"
+      ],
+      "interpretation_cells": [
+        "28bee413"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "notebook_sha256": "15d27f04b0398089b4d0e626f54ad20cb7ede683abfdd965c0775a553b73a92d",
+        "catalog_sha256": [
+          "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+          "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617"
+        ],
+        "purpose": "Separate absolute Euclidean conductor clearance from ground-normalized heights.",
+        "finding": "The fixed 12 m envelope returns 2 m and 10 m distances; SQL reconstructs all three coordinate differences. One return meets the illustrative 3 m screen. The ground-radius experiment leaves all clearance rows and the saved review figure identical."
+      }
+    },
+    {
+      "object": {
+        "schema": "examples",
+        "name": "fetch_items"
+      },
+      "notebook": "02_paginated_inventory_report.ipynb",
+      "sql": [
+        {
+          "cell": "fetch-sql",
+          "reference": "lidar.examples.fetch_items"
+        }
+      ],
+      "narrative_cells": [
+        "fetch-question"
+      ],
+      "result_cells": [
+        "fetch-finding"
+      ],
+      "interpretation_cells": [
+        "fetch-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "notebook_sha256": "d15c02c9531912aae96ab89e1951472274aa2991b079f06341d9b93824b5c6a2",
+        "catalog_sha256": [
+          "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+          "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617"
+        ],
+        "purpose": "Retrieve every page of an explicit local synthetic inventory before computing per-item affordability.",
+        "finding": "Exactly three GETs with two items each yield six unique IDs and 420 USD total. No Authorization header or SQL secret is used; the real worker follows pagination. A 50 USD budget selects three items."
+      }
+    },
+    {
+      "object": {
+        "schema": "examples",
+        "name": "sequence_table"
+      },
+      "notebook": "02_paginated_inventory_report.ipynb",
+      "sql": [
+        {
+          "cell": "sequence-sql",
+          "reference": "lidar.examples.sequence_table"
+        }
+      ],
+      "narrative_cells": [
+        "sequence-question"
+      ],
+      "result_cells": [
+        "sequence-finding"
+      ],
+      "interpretation_cells": [
+        "sequence-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "notebook_sha256": "d15c02c9531912aae96ab89e1951472274aa2991b079f06341d9b93824b5c6a2",
+        "catalog_sha256": [
+          "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+          "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617"
+        ],
+        "purpose": "Generate a fixed seven-budget scenario relation to separate changed decision threshold from input completeness.",
+        "finding": "Budgets 0, 25, \u2026, 150 produce counts 0, 1, 3, 4, 5, 5, 6. The selected scenario matches item-level filtering; no interpolation or basket optimization is claimed."
+      }
+    },
+    {
+      "object": {
+        "schema": "examples",
+        "name": "greet"
+      },
+      "notebook": "02_paginated_inventory_report.ipynb",
+      "sql": [
+        {
+          "cell": "greeting-sql",
+          "reference": "lidar.examples.greet"
+        }
+      ],
+      "narrative_cells": [
+        "greeting-question"
+      ],
+      "result_cells": [
+        "greeting-finding"
+      ],
+      "interpretation_cells": [
+        "greeting-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "/root/notebooks_sympy",
+        "reviewed_at": "2026-11-14T22:38:03.233450+00:00",
+        "notebook_sha256": "d15c02c9531912aae96ab89e1951472274aa2991b079f06341d9b93824b5c6a2",
+        "catalog_sha256": [
+          "274e76104612f48b807b28cfbc73098e5f5592efb197c33dd0eb17b913e7935f",
+          "b4a31412924991c4ceb64f30219bfc5aa75a3065db0328376d93aa578680f617"
+        ],
+        "purpose": "Format local reviewer previews without inventing a missing identity.",
+        "finding": "Both scalar overloads preserve NULL. Two known synthetic names receive complete local preview text; the missing-name preview remains unavailable. Text reflects the selected count and is never sent."
+      }
+    }
+  ]
+}

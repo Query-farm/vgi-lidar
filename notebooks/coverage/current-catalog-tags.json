@@ -1,0 +1,25 @@
+{
+  "query": "SELECT tags FROM duckdb_databases() WHERE database_name='lidar'",
+  "columns": [
+    "tags"
+  ],
+  "rows": [
+    [
+      {
+        "vgi.agent_test_tasks": "[{\"name\": \"formal_greeting\", \"prompt\": \"Using the lidar worker, greet the name 'Grace' formally.\"}, {\"name\": \"sum_of_squares\", \"prompt\": \"Using the lidar worker, what is the sum of the squared column for the first 10 rows of the sequence with the default step?\"}, {\"name\": \"stepped_sequence\", \"prompt\": \"List the n values of a 4-row sequence that steps by 5, in ascending order.\"}, {\"name\": \"items_per_category\", \"prompt\": \"The items API is running at https://vgi-starter-api.query-farm.services/v1. How many items does it have in each category?\"}, {\"name\": \"gis_demo_input\", \"prompt\": \"Inspect the bundled site identity. Use the bundled synthetic inputs and return the columns and ordering shown in its catalog example.\"}, {\"name\": \"gis_height_metrics\", \"prompt\": \"Estimate heights above a known flat ground surface. Use the bundled synthetic inputs and return the columns and ordering shown in its catalog example.\"}, {\"name\": \"gis_vegetation_clearance\", \"prompt\": \"Find a tree return two metres below a conductor. Use the bundled synthetic inputs and return the columns and ordering shown in its catalog example.\"}, {\"name\": \"gis_corridor_screen\", \"prompt\": \"Screen the bundled synthetic power-line corridor. Using the bundled site polygon, find the maximum canopy height inside it; using the bundled conductor, count the vegetation returns within 15 metres of the line and find the closest one. Return one row with columns canopy_max_m (DOUBLE), returns_within_15m (BIGINT) and closest_clearance_m (DOUBLE, rounded to 2 decimals).\"}]",
+        "vgi.author": "Query.Farm",
+        "vgi.copyright": "Copyright 2026 Query.Farm LLC",
+        "vgi.doc_llm": "Read classified LAS/LAZ point clouds to estimate building and canopy heights above nearby classified ground, and find vegetation points within a three-dimensional clearance distance of supplied power-line geometry. Inputs and outputs retain caller feature IDs; horizontal coordinates and elevations must be metres. This worker uses existing ASPRS classifications: ground=2, vegetation=3/4/5, buildings=6.",
+        "vgi.doc_md": "## GIS analysis\n\nRead classified LAS/LAZ point clouds to estimate building and canopy heights above nearby classified ground, and find vegetation points within a three-dimensional clearance distance of supplied power-line geometry. Inputs and outputs retain caller feature IDs; horizontal coordinates and elevations must be metres. This worker uses existing ASPRS classifications: ground=2, vegetation=3/4/5, buildings=6.\n\n### SQL workflow\n\nPass query results to the main schema functions, retaining IDs for joins. Use bundled synthetic data to try the executable examples without network access. CRS, coverage, inference limits and resource bounds are explicit function parameters. The examples schema preserves the SDK regression recipes.",
+        "vgi.icon_url": "https://query.farm/media-kit/products/vgi/vgi-logo.png",
+        "vgi.keywords": "[\"vgi\", \"duckdb\", \"lidar\", \"point cloud\", \"canopy\", \"building height\", \"conductor clearance\"]",
+        "vgi.license": "0BSD",
+        "vgi.source_url": "https://github.com/Query-farm/vgi-lidar",
+        "vgi.subtitle": "Classified point-cloud heights and vegetation clearance around power lines.",
+        "vgi.support_contact": "https://github.com/Query-farm/vgi-lidar/issues",
+        "vgi.support_policy_url": "https://github.com/Query-farm/vgi-lidar#support",
+        "vgi.title": "LiDAR analysis"
+      }
+    ]
+  ]
+}

@@ -99,4 +99,4 @@ Source and issue tracking are published at [Query-farm/vgi-lidar](https://github
 
 ## Notebook
 
-[Height support changes the population](notebooks/README.md) is an executed, portable SQL analysis of the bundled synthetic cloud.
+[Executed LiDAR walkthroughs](notebooks/README.md) separate supported canopy heights from absolute conductor clearance and demonstrate the public starter-schema workflow.

@@ -1,0 +1,8 @@
+line-length = 100
+builtins = ["metrics", "checks", "population", "reference", "clearance", "distances", "inventory", "budget_grid", "previews"]
+exclude = [".venv", "artifacts", "validation", ".vgi-examples"]
+[lint.per-file-ignores]
+"*.ipynb" = ["E501"]
+"lidar_fixture.py" = ["E501"]
+[format]
+exclude = ["lidar_fixture.py"]

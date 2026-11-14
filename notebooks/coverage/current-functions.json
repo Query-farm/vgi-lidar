@@ -1,0 +1,347 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='lidar' ORDER BY schema_name,function_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "lidar",
+      "22592",
+      "examples",
+      "fetch_items",
+      null,
+      "table",
+      "Read every item from a paginated REST API, one page per batch",
+      null,
+      {
+        "vgi.category": "api",
+        "vgi.doc_llm": "Read all items from a paginated JSON REST API at `base_url` and return them as rows `(id, name, category, price)`. Pages are requested `page_size` at a time (named argument, default 100) and streamed to DuckDB as they arrive. If a DuckDB secret of type `lidar_api` exists its `token` is sent as a bearer token; otherwise the `LIDAR_API_TOKEN` environment variable is used. Rate-limit (429) and server errors are retried with backoff.",
+        "vgi.doc_md": "## fetch_items(base_url, page_size := 100)\n\nEvery item from a paginated REST API, streamed one page per batch.\n\nAuthenticate with a `lidar_api` secret or the `LIDAR_API_TOKEN` environment variable:\n\n```sql\nCREATE SECRET (TYPE lidar_api, TOKEN 'your-token');\n```",
+        "vgi.example_queries": "[{\"description\": \"The five priciest hardware items from the public demo API\", \"sql\": \"SELECT id, name, price FROM lidar.examples.fetch_items('https://vgi-starter-api.query-farm.services/v1') WHERE category = 'hardware' ORDER BY price DESC LIMIT 5\"}, {\"description\": \"Summarize the API's items by category, ten per request\", \"sql\": \"SELECT category, count(*) AS items, avg(price) AS avg_price FROM lidar.examples.fetch_items('https://vgi-starter-api.query-farm.services/v1', page_size := 10) GROUP BY category ORDER BY category\"}]",
+        "vgi.keywords": "[\"rest api\", \"http\", \"pagination\", \"fetch\", \"items\", \"json api\", \"bearer token\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Item identifier assigned by the API.\"}, {\"name\": \"name\", \"type\": \"VARCHAR\", \"description\": \"Item display name.\"}, {\"name\": \"category\", \"type\": \"VARCHAR\", \"description\": \"Item category, e.g. 'hardware'.\"}, {\"name\": \"price\", \"type\": \"DOUBLE\", \"description\": \"Item price in US dollars.\"}]",
+        "vgi.title": "Fetch Items From API"
+      },
+      null,
+      [
+        "base_url",
+        "page_size"
+      ],
+      [
+        "VARCHAR",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22598,
+      [
+        "SELECT id, name, price FROM lidar.examples.fetch_items('https://vgi-starter-api.query-farm.services/v1') WHERE category = 'hardware' ORDER BY price DESC LIMIT 5",
+        "SELECT category, count(*) AS items, avg(price) AS avg_price FROM lidar.examples.fetch_items('https://vgi-starter-api.query-farm.services/v1', page_size := 10) GROUP BY category ORDER BY category"
+      ],
+      null,
+      []
+    ],
+    [
+      "lidar",
+      "22592",
+      "examples",
+      "greet",
+      null,
+      "scalar",
+      "Greet a name casually: greet('Ada') returns 'Hi, Ada!'",
+      null,
+      {
+        "vgi.category": "text",
+        "vgi.doc_llm": "Return a greeting for each input name in the requested tone. `style` must be a constant, either `'casual'` (`'Hi, Ada!'`) or `'formal'` (`'Good day, Ada.'`); any other value is rejected when the query is planned. NULL names produce NULL.",
+        "vgi.doc_md": "## greet(name, style)\n\nA greeting in the chosen tone: `'casual'` or `'formal'`.\n\n`greet('Ada', 'formal')` returns `'Good day, Ada.'`.",
+        "vgi.example_queries": "[{\"description\": \"Greet one name casually\", \"sql\": \"SELECT lidar.examples.greet('Ada') AS greeting\"}, {\"description\": \"Greet one name formally\", \"sql\": \"SELECT lidar.examples.greet('Ada', 'formal') AS greeting\"}]",
+        "vgi.keywords": "[\"greet\", \"greeting\", \"formal greeting\", \"casual greeting\", \"salutation\", \"tone\"]",
+        "vgi.title": "Greet (with tone)"
+      },
+      "VARCHAR",
+      [
+        "name"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22597,
+      [
+        "SELECT lidar.examples.greet('Ada') AS greeting"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "lidar",
+      "22592",
+      "examples",
+      "greet",
+      null,
+      "scalar",
+      "Greet a name in a chosen tone: greet('Ada', 'formal') returns 'Good day, Ada.'",
+      null,
+      {
+        "vgi.category": "text",
+        "vgi.doc_llm": "Return a greeting for each input name in the requested tone. `style` must be a constant, either `'casual'` (`'Hi, Ada!'`) or `'formal'` (`'Good day, Ada.'`); any other value is rejected when the query is planned. NULL names produce NULL.",
+        "vgi.doc_md": "## greet(name, style)\n\nA greeting in the chosen tone: `'casual'` or `'formal'`.\n\n`greet('Ada', 'formal')` returns `'Good day, Ada.'`.",
+        "vgi.example_queries": "[{\"description\": \"Greet one name casually\", \"sql\": \"SELECT lidar.examples.greet('Ada') AS greeting\"}, {\"description\": \"Greet one name formally\", \"sql\": \"SELECT lidar.examples.greet('Ada', 'formal') AS greeting\"}]",
+        "vgi.keywords": "[\"greet\", \"greeting\", \"formal greeting\", \"casual greeting\", \"salutation\", \"tone\"]",
+        "vgi.title": "Greet (with tone)"
+      },
+      "VARCHAR",
+      [
+        "name",
+        "style"
+      ],
+      [
+        "VARCHAR",
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22597,
+      [
+        "SELECT lidar.examples.greet('Ada', 'formal') AS greeting"
+      ],
+      "CONSISTENT",
+      []
+    ],
+    [
+      "lidar",
+      "22592",
+      "examples",
+      "sequence_table",
+      null,
+      "table",
+      "Generate count rows of (n, squared), stepping n by step",
+      null,
+      {
+        "vgi.category": "generators",
+        "vgi.doc_llm": "Generate a deterministic table of `count` rows with columns `n` and `squared`, where `n` runs `0, step, 2*step, ...`. `count` is positional (0 to 1,000,000); `step` is a named argument that defaults to 1, for example `sequence_table(5, step := 2)`. Rows stream back in batches, so large counts do not buffer in memory.",
+        "vgi.doc_md": "## sequence_table(count, step := 1)\n\n`count` rows of `(n, squared)` with `n = 0, step, 2*step, ...`.\n\nDeterministic, so it is handy for tests and demos.",
+        "vgi.example_queries": "[{\"description\": \"The first five values and their squares\", \"sql\": \"SELECT n, squared FROM lidar.examples.sequence_table(5) ORDER BY n\"}, {\"description\": \"Four values stepping by ten\", \"sql\": \"SELECT n FROM lidar.examples.sequence_table(4, step := 10) ORDER BY n\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Three rows stepping by two\", \"sql\": \"SELECT n, squared FROM lidar.examples.sequence_table(3, step := 2) ORDER BY n\", \"expected_result\": [[0, 0], [2, 4], [4, 16]]}, {\"description\": \"Count the rows generated\", \"sql\": \"SELECT count(*) AS rows FROM lidar.examples.sequence_table(1000)\", \"expected_result\": [[1000]]}]",
+        "vgi.keywords": "[\"sequence\", \"series\", \"range\", \"generate rows\", \"numbers\", \"squares\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"n\", \"type\": \"BIGINT\", \"description\": \"The generated value: row index times step.\"}, {\"name\": \"squared\", \"type\": \"BIGINT\", \"description\": \"n multiplied by itself.\"}]",
+        "vgi.title": "Sequence Table"
+      },
+      null,
+      [
+        "count",
+        "step"
+      ],
+      [
+        "BIGINT",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22599,
+      [
+        "SELECT n, squared FROM lidar.examples.sequence_table(5) ORDER BY n",
+        "SELECT n FROM lidar.examples.sequence_table(4, step := 10) ORDER BY n"
+      ],
+      null,
+      []
+    ],
+    [
+      "lidar",
+      "22592",
+      "main",
+      "demo_input",
+      null,
+      "table",
+      "Synthetic site polygon or 3D conductor for the bundled classified cloud",
+      null,
+      {
+        "vgi.category": "gis",
+        "vgi.doc_llm": "Return a site polygon or, with kind := 'conductor', a 3D line in EPSG:32618. Both overlay demo://classified.laz, whose flat ground is at 100 m and conductor at 120 m in a synthetic common vertical datum.",
+        "vgi.doc_md": "## Demo LiDAR geometry\n\nReturn a site polygon or, with kind := 'conductor', a 3D line in EPSG:32618. Both overlay demo://classified.laz, whose flat ground is at 100 m and conductor at 120 m in a synthetic common vertical datum.",
+        "vgi.example_queries": "[{\"description\": \"Inspect the bundled site identity\", \"sql\": \"SELECT feature_id FROM lidar.main.demo_input()\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Demo LiDAR geometry on bundled synthetic data\", \"sql\": \"SELECT feature_id FROM lidar.main.demo_input()\", \"expected_result\": [[\"site\"]]}]",
+        "vgi.keywords": "[\"GIS\", \"geospatial\", \"lidar\", \"analysis\", \"Arrow\", \"SQL\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"feature_id\", \"type\": \"VARCHAR\", \"description\": \"Caller-owned area or conductor identity.\"}, {\"name\": \"geometry_wkb\", \"type\": \"BLOB\", \"description\": \"Area polygon or 3D conductor LineString in geometry_crs.\"}]",
+        "vgi.title": "Demo LiDAR geometry"
+      },
+      null,
+      [
+        "kind"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22600,
+      [
+        "SELECT feature_id FROM lidar.main.demo_input()"
+      ],
+      null,
+      []
+    ],
+    [
+      "lidar",
+      "22592",
+      "main",
+      "height_metrics",
+      null,
+      "table",
+      "Estimate building and canopy heights from classified LAS/LAZ points",
+      null,
+      {
+        "vgi.category": "gis",
+        "vgi.doc_llm": "Read classified LAS/LAZ point clouds to estimate building and canopy heights above nearby classified ground, and find vegetation points within a three-dimensional clearance distance of supplied power-line geometry. Inputs and outputs retain caller feature IDs; horizontal coordinates and elevations must be metres. This worker uses existing ASPRS classifications: ground=2, vegetation=3/4/5, buildings=6. Height normalization uses the nearest classified ground return within ground_radius_m; sparse ground is explicitly counted. No automatic classification or vertical datum correction is implied. Missing classes give NULL percentiles. Canopy cover uses observed cells with complete ground support; observation and ground-support coverage are reported separately. Output rows stream in batches of at most 4096.",
+        "vgi.doc_md": "## Building and canopy metrics\n\nRead classified LAS/LAZ point clouds to estimate building and canopy heights above nearby classified ground, and find vegetation points within a three-dimensional clearance distance of supplied power-line geometry. Inputs and outputs retain caller feature IDs; horizontal coordinates and elevations must be metres. This worker uses existing ASPRS classifications: ground=2, vegetation=3/4/5, buildings=6. Height normalization uses the nearest classified ground return within ground_radius_m; sparse ground is explicitly counted. No automatic classification or vertical datum correction is implied. Missing classes give NULL percentiles. Canopy cover uses observed cells with complete ground support; observation and ground-support coverage are reported separately. Output rows stream in batches of at most 4096.",
+        "vgi.example_queries": "[{\"description\": \"Estimate heights above a known flat ground surface\", \"sql\": \"SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id\"}, {\"description\": \"Run height_metrics twice over the bundled site, at the default 2 m and at a 15 m canopy threshold, and join the results: canopy cover is 0.077 and 0.038, so half of the canopy cells hold vegetation at least 15 m tall\", \"sql\": \"WITH any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), tall AS (SELECT feature_id, canopy_cover_fraction AS cover_15m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), canopy_height_m := 15)) SELECT feature_id, round(cover_2m, 3) AS cover_2m, round(cover_15m, 3) AS cover_15m, round(cover_15m / cover_2m, 2) AS tall_share FROM any_canopy JOIN tall USING (feature_id) ORDER BY feature_id\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Building and canopy metrics on bundled synthetic data\", \"sql\": \"SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id\", \"expected_result\": [[\"site\", 11.9, 18.0]]}]",
+        "vgi.keywords": "[\"GIS\", \"geospatial\", \"lidar\", \"analysis\", \"Arrow\", \"SQL\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"feature_id\", \"type\": \"VARCHAR\", \"description\": \"Caller-owned polygon identity.\"}, {\"name\": \"point_count\", \"type\": \"BIGINT\", \"description\": \"Number of non-noise points inside the polygon.\"}, {\"name\": \"building_points\", \"type\": \"BIGINT\", \"description\": \"Class-6 points with nearby classified ground support.\"}, {\"name\": \"building_p95_m\", \"type\": \"DOUBLE\", \"description\": \"95th percentile building height above nearest classified ground, metres.\"}, {\"name\": \"building_max_m\", \"type\": \"DOUBLE\", \"description\": \"Maximum supported building height above nearest ground, metres.\"}, {\"name\": \"vegetation_points\", \"type\": \"BIGINT\", \"description\": \"Class-3/4/5 points with nearby classified ground support.\"}, {\"name\": \"canopy_p95_m\", \"type\": \"DOUBLE\", \"description\": \"95th percentile supported vegetation height above ground, metres.\"}, {\"name\": \"canopy_max_m\", \"type\": \"DOUBLE\", \"description\": \"Maximum supported vegetation height above ground, metres.\"}, {\"name\": \"canopy_cover_fraction\", \"type\": \"DOUBLE\", \"description\": \"Fraction of fully ground-supported observed cells containing vegetation above canopy_height_m.\"}, {\"name\": \"observed_cell_fraction\", \"type\": \"DOUBLE\", \"description\": \"Fraction of polygon-intersecting grid cells with at least one usable point.\"}, {\"name\": \"ground_supported_cell_fraction\", \"type\": \"DOUBLE\", \"description\": \"Share of observed cells whose points all have ground support; denominator for canopy coverage.\"}, {\"name\": \"unsupported_points\", \"type\": \"BIGINT\", \"description\": \"Building/vegetation points without ground within ground_radius_m.\"}, {\"name\": \"status\", \"type\": \"VARCHAR\", \"description\": \"ok, partial_ground, no_ground, or no_points.\"}, {\"name\": \"cloud_crs\", \"type\": \"VARCHAR\", \"description\": \"Projected metre CRS of the source cloud.\"}]",
+        "vgi.title": "Building and canopy metrics"
+      },
+      null,
+      [
+        "data",
+        "path",
+        "cloud_crs",
+        "max_segments",
+        "max_distance_evaluations",
+        "canopy_height_m",
+        "ground_radius_m",
+        "grid_size_m",
+        "geometry_crs",
+        "z_scale_to_m",
+        "max_grid_cells",
+        "clearance_m",
+        "max_points"
+      ],
+      [
+        "TABLE",
+        "VARCHAR",
+        "VARCHAR",
+        "BIGINT",
+        "BIGINT",
+        "DOUBLE",
+        "DOUBLE",
+        "DOUBLE",
+        "VARCHAR",
+        "DOUBLE",
+        "BIGINT",
+        "DOUBLE",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22601,
+      [
+        "SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id",
+        "WITH any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), tall AS (SELECT feature_id, canopy_cover_fraction AS cover_15m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), canopy_height_m := 15)) SELECT feature_id, round(cover_2m, 3) AS cover_2m, round(cover_15m, 3) AS cover_15m, round(cover_15m / cover_2m, 2) AS tall_share FROM any_canopy JOIN tall USING (feature_id) ORDER BY feature_id"
+      ],
+      null,
+      []
+    ],
+    [
+      "lidar",
+      "22592",
+      "main",
+      "vegetation_clearance",
+      null,
+      "table",
+      "Find classified vegetation within a 3D power-line clearance distance",
+      null,
+      {
+        "vgi.category": "gis",
+        "vgi.doc_llm": "Compare classified vegetation returns with supplied 3D LineString/MultiLineString conductor geometry. Return exact Euclidean distance, nearest conductor coordinate and original point index for each return within clearance_m. Input conductor Z and cloud Z must share a vertical datum and metre units. Two-dimensional lines fail. An empty result means no observed encroachments, not a certified safe corridor.",
+        "vgi.doc_md": "## Vegetation conductor clearance\n\nCompare classified vegetation returns with supplied 3D LineString/MultiLineString conductor geometry. Return exact Euclidean distance, nearest conductor coordinate and original point index for each return within clearance_m. Input conductor Z and cloud Z must share a vertical datum and metre units. Two-dimensional lines fail. An empty result means no observed encroachments, not a certified safe corridor.",
+        "vgi.example_queries": "[{\"description\": \"Find a tree return two metres below a conductor\", \"sql\": \"SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index\"}, {\"description\": \"Span vegetation report: join canopy height and cover from height_metrics over the right-of-way polygon with vegetation_clearance returns along the conductor (12 m search); Span 7 has 18 m canopy, one return within 3 m, two within 12 m, the closest at 2 m\", \"sql\": \"WITH spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), canopy AS (SELECT feature_id, canopy_max_m, canopy_cover_fraction FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), returns AS (SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m, count(*) AS within_12m, min(clearance_m) AS closest_m FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), clearance_m := 12) GROUP BY feature_id) SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover, coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m, round(r.closest_m, 2) AS closest_m FROM spans s JOIN canopy c ON c.feature_id = s.corridor_id LEFT JOIN returns r ON r.feature_id = s.conductor_id ORDER BY s.span_id\"}]",
+        "vgi.executable_examples": "[{\"description\": \"Vegetation conductor clearance on bundled synthetic data\", \"sql\": \"SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index\", \"expected_result\": [[\"line\", 2.0]]}]",
+        "vgi.keywords": "[\"GIS\", \"geospatial\", \"lidar\", \"analysis\", \"Arrow\", \"SQL\"]",
+        "vgi.result_columns_schema": "[{\"name\": \"feature_id\", \"type\": \"VARCHAR\", \"description\": \"Caller-owned conductor identity.\"}, {\"name\": \"point_index\", \"type\": \"BIGINT\", \"description\": \"Zero-based original point-cloud record index.\"}, {\"name\": \"clearance_m\", \"type\": \"DOUBLE\", \"description\": \"Exact Euclidean 3D distance from vegetation return to the nearest conductor segment, metres.\"}, {\"name\": \"x\", \"type\": \"DOUBLE\", \"description\": \"Vegetation return X in cloud_crs.\"}, {\"name\": \"y\", \"type\": \"DOUBLE\", \"description\": \"Vegetation return Y in cloud_crs.\"}, {\"name\": \"z_m\", \"type\": \"DOUBLE\", \"description\": \"Vegetation return elevation in metres in the supplied vertical datum.\"}, {\"name\": \"nearest_x\", \"type\": \"DOUBLE\", \"description\": \"Nearest conductor position X in cloud_crs.\"}, {\"name\": \"nearest_y\", \"type\": \"DOUBLE\", \"description\": \"Nearest conductor position Y in cloud_crs.\"}, {\"name\": \"nearest_z_m\", \"type\": \"DOUBLE\", \"description\": \"Nearest conductor elevation, metres in the same vertical datum as the cloud.\"}, {\"name\": \"cloud_crs\", \"type\": \"VARCHAR\", \"description\": \"Projected metre CRS for XY coordinates.\"}]",
+        "vgi.title": "Vegetation conductor clearance"
+      },
+      null,
+      [
+        "data",
+        "path",
+        "cloud_crs",
+        "max_segments",
+        "max_distance_evaluations",
+        "canopy_height_m",
+        "ground_radius_m",
+        "grid_size_m",
+        "geometry_crs",
+        "z_scale_to_m",
+        "max_grid_cells",
+        "clearance_m",
+        "max_points"
+      ],
+      [
+        "TABLE",
+        "VARCHAR",
+        "VARCHAR",
+        "BIGINT",
+        "BIGINT",
+        "DOUBLE",
+        "DOUBLE",
+        "DOUBLE",
+        "VARCHAR",
+        "DOUBLE",
+        "BIGINT",
+        "DOUBLE",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22602,
+      [
+        "SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index",
+        "WITH spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), canopy AS (SELECT feature_id, canopy_max_m, canopy_cover_fraction FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), returns AS (SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m, count(*) AS within_12m, min(clearance_m) AS closest_m FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), clearance_m := 12) GROUP BY feature_id) SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover, coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m, round(r.closest_m, 2) AS closest_m FROM spans s JOIN canopy c ON c.feature_id = s.corridor_id LEFT JOIN returns r ON r.feature_id = s.conductor_id ORDER BY s.span_id"
+      ],
+      null,
+      []
+    ]
+  ]
+}
