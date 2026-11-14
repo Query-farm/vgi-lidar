@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "catalog": "lidar",
+  "worker": [
+    ".venv/bin/vgi-lidar-worker"
+  ],
+  "checks": [
+    {
+      "name": "Demo LiDAR geometry on bundled synthetic data",
+      "sql": "SELECT feature_id FROM lidar.main.demo_input()",
+      "rows": [
+        [
+          "site"
+        ]
+      ]
+    },
+    {
+      "name": "Building and canopy metrics on bundled synthetic data",
+      "sql": "SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id",
+      "rows": [
+        [
+          "site",
+          11.9,
+          18.0
+        ]
+      ]
+    },
+    {
+      "name": "Vegetation conductor clearance on bundled synthetic data",
+      "sql": "SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index",
+      "rows": [
+        [
+          "line",
+          2.0
+        ]
+      ]
+    },
+    {
+      "name": "Empty polygon relation",
+      "sql": "SELECT count(*) FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input() WHERE false))",
+      "rows": [
+        [
+          0
+        ]
+      ]
+    },
+    {
+      "name": "Multiple conductor batches",
+      "sql": "SELECT count(*), min(clearance_m), max(clearance_m) FROM lidar.main.vegetation_clearance((SELECT i::VARCHAR feature_id, geometry_wkb FROM lidar.main.demo_input(kind := 'conductor') CROSS JOIN range(2501) t(i)))",
+      "rows": [
+        [
+          2501,
+          2.0,
+          2.0
+        ]
+      ]
+    },
+    {
+      "name": "Prioritize vegetation clearance by asset owner",
+      "sql": "WITH assets(feature_id, circuit_name) AS (VALUES ('line', 'Circuit 12')),\nconflicts AS (SELECT * FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))))\nSELECT a.circuit_name, count(*) AS vegetation_returns, round(min(c.clearance_m), 2) AS closest_m\nFROM conflicts c JOIN assets a USING(feature_id) GROUP BY a.circuit_name ORDER BY a.circuit_name",
+      "rows": [
+        [
+          "Circuit 12",
+          1,
+          2.0
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""VGI lidar worker package."""

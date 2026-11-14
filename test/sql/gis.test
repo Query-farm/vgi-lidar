@@ -1,0 +1,57 @@
+# GIS domain acceptance tests for lidar.
+require vgi
+
+require-env LIDAR_WORKER
+
+statement ok
+ATTACH 'lidar' (TYPE vgi, LOCATION '{LIDAR_WORKER}');
+
+# Demo LiDAR geometry on bundled synthetic data
+query T
+SELECT feature_id FROM lidar.main.demo_input();
+----
+site
+
+# Building and canopy metrics on bundled synthetic data
+query TTT
+SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id;
+----
+site	11.9	18.0
+
+# Vegetation conductor clearance on bundled synthetic data
+query TT
+SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index;
+----
+line	2.0
+
+# Empty polygon relation
+query T
+SELECT count(*) FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input() WHERE false));
+----
+0
+
+# Multiple conductor batches
+query TTT
+SELECT count(*), min(clearance_m), max(clearance_m) FROM lidar.main.vegetation_clearance((SELECT i::VARCHAR feature_id, geometry_wkb FROM lidar.main.demo_input(kind := 'conductor') CROSS JOIN range(2501) t(i)));
+----
+2501	2.0	2.0
+
+# Prioritize vegetation clearance by asset owner
+query TTT
+WITH assets(feature_id, circuit_name) AS (VALUES ('line', 'Circuit 12')),
+conflicts AS (SELECT * FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))))
+SELECT a.circuit_name, count(*) AS vegetation_returns, round(min(c.clearance_m), 2) AS closest_m
+FROM conflicts c JOIN assets a USING(feature_id) GROUP BY a.circuit_name ORDER BY a.circuit_name;
+----
+Circuit 12	1	2.0
+
+statement error
+SELECT * FROM lidar.main.height_metrics((SELECT 1 AS wrong_column));
+----
+Missing input columns
+
+# Constant controls must not accept infinity.
+statement error
+SELECT * FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), ground_radius_m := 'Infinity'::DOUBLE);
+----
+finite
