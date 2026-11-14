@@ -74,3 +74,7 @@ Run `make release-check` to build a wheel from the source archive and verify its
 ## Support
 
 Source and issue tracking are published at [Query-farm/vgi-lidar](https://github.com/Query-farm/vgi-lidar). No hosted deployment or container release is provided by publishing this source. Keep reports tied to the input CRS, resource limits and reproducible SQL. See [LICENSE](LICENSE) for the starter's license and dependency licenses for their terms.
+
+## Notebook
+
+[Height support changes the population](notebooks/README.md) is an executed, portable SQL analysis of the bundled synthetic cloud.
