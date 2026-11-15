@@ -5,6 +5,7 @@
 - Removed the starter template's demo schema (examples.greet/fetch_items/sequence_table), demo_input and the placeholder lidar_api secret type. The worker now exposes only `main.height_metrics` and `main.vegetation_clearance` and declares no credentials.
 - Examples, SQL tests, the stock DuckDB manifest, demo.sql and agent tasks build their sample site polygon and 3D conductor as inline WKB (`ST_AsWKB('…'::GEOMETRY)`) over the bundled `demo://classified.laz` cloud. Callers of `demo_input()` should do the same.
 - Removed the starter's SDK recipes (`examples/`), its mock REST API and starter unit/SQL tests, and the starter-only pagination notebook.
+- The catalog comment is now a short plain-text description of what the worker covers; the detailed analysis notes remain in the catalog's `vgi.doc_md` and `vgi.doc_llm` documentation.
 
 ## 0.1.0 (2026-11-14)
 
