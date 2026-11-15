@@ -6,40 +6,38 @@ require-env LIDAR_WORKER
 statement ok
 ATTACH 'lidar' (TYPE vgi, LOCATION '{LIDAR_WORKER}');
 
-# Demo LiDAR geometry on bundled synthetic data
-query T
-SELECT feature_id FROM lidar.main.demo_input();
-----
-site
+# Sample geometry is inline WKB over the bundled demo://classified.laz cloud (EPSG:32618):
+# a 50 x 50 m site polygon and a 3D conductor at 120 m.
 
 # Building and canopy metrics on bundled synthetic data
 query TTT
-SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id;
+WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))) SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM site)) ORDER BY feature_id;
 ----
 site	11.9	18.0
 
 # Vegetation conductor clearance on bundled synthetic data
 query TT
-SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index;
+WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))) SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM conductor)) ORDER BY feature_id, point_index;
 ----
 line	2.0
 
 # Empty polygon relation
 query T
-SELECT count(*) FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input() WHERE false));
+WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))) SELECT count(*) FROM lidar.main.height_metrics((SELECT * FROM site WHERE false));
 ----
 0
 
 # Multiple conductor batches
 query TTT
-SELECT count(*), min(clearance_m), max(clearance_m) FROM lidar.main.vegetation_clearance((SELECT i::VARCHAR feature_id, geometry_wkb FROM lidar.main.demo_input(kind := 'conductor') CROSS JOIN range(2501) t(i)));
+WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))) SELECT count(*), min(clearance_m), max(clearance_m) FROM lidar.main.vegetation_clearance((SELECT i::VARCHAR feature_id, geometry_wkb FROM conductor CROSS JOIN range(2501) t(i)));
 ----
 2501	2.0	2.0
 
 # Prioritize vegetation clearance by asset owner
 query TTT
-WITH assets(feature_id, circuit_name) AS (VALUES ('line', 'Circuit 12')),
-conflicts AS (SELECT * FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))))
+WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))),
+assets(feature_id, circuit_name) AS (VALUES ('line', 'Circuit 12')),
+conflicts AS (SELECT * FROM lidar.main.vegetation_clearance((SELECT * FROM conductor)))
 SELECT a.circuit_name, count(*) AS vegetation_returns, round(min(c.clearance_m), 2) AS closest_m
 FROM conflicts c JOIN assets a USING(feature_id) GROUP BY a.circuit_name ORDER BY a.circuit_name;
 ----
@@ -47,13 +45,13 @@ Circuit 12	1	2.0
 
 # Composed: span report joining height_metrics and vegetation_clearance
 query TTTTTT
-WITH spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), canopy AS (SELECT feature_id, canopy_max_m, canopy_cover_fraction FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), returns AS (SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m, count(*) AS within_12m, min(clearance_m) AS closest_m FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), clearance_m := 12) GROUP BY feature_id) SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover, coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m, round(r.closest_m, 2) AS closest_m FROM spans s JOIN canopy c ON c.feature_id = s.corridor_id LEFT JOIN returns r ON r.feature_id = s.conductor_id ORDER BY s.span_id;
+WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))), conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))), spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), canopy AS (SELECT feature_id, canopy_max_m, canopy_cover_fraction FROM lidar.main.height_metrics((SELECT * FROM site))), returns AS (SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m, count(*) AS within_12m, min(clearance_m) AS closest_m FROM lidar.main.vegetation_clearance((SELECT * FROM conductor), clearance_m := 12) GROUP BY feature_id) SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover, coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m, round(r.closest_m, 2) AS closest_m FROM spans s JOIN canopy c ON c.feature_id = s.corridor_id LEFT JOIN returns r ON r.feature_id = s.conductor_id ORDER BY s.span_id;
 ----
 Span 7	18.0	0.077	1	2	2.0
 
 # Composed: canopy cover at two height thresholds
 query TTTT
-WITH any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), tall AS (SELECT feature_id, canopy_cover_fraction AS cover_15m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), canopy_height_m := 15)) SELECT feature_id, round(cover_2m, 3) AS cover_2m, round(cover_15m, 3) AS cover_15m, round(cover_15m / cover_2m, 2) AS tall_share FROM any_canopy JOIN tall USING (feature_id) ORDER BY feature_id;
+WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))), any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM lidar.main.height_metrics((SELECT * FROM site))), tall AS (SELECT feature_id, canopy_cover_fraction AS cover_15m FROM lidar.main.height_metrics((SELECT * FROM site), canopy_height_m := 15)) SELECT feature_id, round(cover_2m, 3) AS cover_2m, round(cover_15m, 3) AS cover_15m, round(cover_15m / cover_2m, 2) AS tall_share FROM any_canopy JOIN tall USING (feature_id) ORDER BY feature_id;
 ----
 site	0.077	0.038	0.5
 
@@ -64,6 +62,6 @@ Missing input columns
 
 # Constant controls must not accept infinity.
 statement error
-SELECT * FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), ground_radius_m := 'Infinity'::DOUBLE);
+WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))) SELECT * FROM lidar.main.height_metrics((SELECT * FROM site), ground_radius_m := 'Infinity'::DOUBLE);
 ----
 finite

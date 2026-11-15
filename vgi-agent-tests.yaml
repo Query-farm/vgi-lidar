@@ -2,31 +2,16 @@
 # `vgi-lint lint --ai` runs an agent on each prompt and grades it with check_sql.
 # See https://github.com/Query-farm/vgi-lint-check (VGI920).
 tasks:
-  - name: formal_greeting
-    reference_sql: SELECT lidar.examples.greet('Grace', 'formal') AS greeting
-  - name: sum_of_squares
-    reference_sql: SELECT sum(squared) AS total FROM lidar.examples.sequence_table(10)
-  - name: stepped_sequence
-    reference_sql: SELECT n FROM lidar.examples.sequence_table(4, step := 5) ORDER BY n
-  # Reads the public demo API (https://vgi-starter-api.query-farm.services/v1).
-  - name: items_per_category
-    check_sql: >-
-      SELECT count(*) = 3 AND sum(items) = 25
-      FROM (SELECT category, count(*) AS items
-            FROM lidar.examples.fetch_items('https://vgi-starter-api.query-farm.services/v1') GROUP BY category)
-
-  - name: gis_demo_input
-    reference_sql: "SELECT feature_id FROM lidar.main.demo_input()"
-
   - name: gis_height_metrics
-    reference_sql: "SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id"
+    reference_sql: "WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))) SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM site)) ORDER BY feature_id"
 
   - name: gis_vegetation_clearance
-    reference_sql: "SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index"
+    reference_sql: "WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))) SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM conductor)) ORDER BY feature_id, point_index"
 
   # Composed: height_metrics over the site polygon plus vegetation_clearance along the conductor.
   - name: gis_corridor_screen
     reference_sql: >-
-      SELECT (SELECT canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))) AS canopy_max_m,
+      WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))), conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY)))
+      SELECT (SELECT canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM site))) AS canopy_max_m,
       count(*) AS returns_within_15m, round(min(clearance_m), 2) AS closest_clearance_m
-      FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), clearance_m := 15)
+      FROM lidar.main.vegetation_clearance((SELECT * FROM conductor), clearance_m := 15)

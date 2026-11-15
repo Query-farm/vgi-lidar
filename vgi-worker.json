@@ -6,17 +6,8 @@
   ],
   "checks": [
     {
-      "name": "Demo LiDAR geometry on bundled synthetic data",
-      "sql": "SELECT feature_id FROM lidar.main.demo_input()",
-      "rows": [
-        [
-          "site"
-        ]
-      ]
-    },
-    {
       "name": "Building and canopy metrics on bundled synthetic data",
-      "sql": "SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY feature_id",
+      "sql": "WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))) SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM lidar.main.height_metrics((SELECT * FROM site)) ORDER BY feature_id",
       "rows": [
         [
           "site",
@@ -27,7 +18,7 @@
     },
     {
       "name": "Vegetation conductor clearance on bundled synthetic data",
-      "sql": "SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))) ORDER BY feature_id, point_index",
+      "sql": "WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))) SELECT feature_id, round(clearance_m, 2) FROM lidar.main.vegetation_clearance((SELECT * FROM conductor)) ORDER BY feature_id, point_index",
       "rows": [
         [
           "line",
@@ -37,7 +28,7 @@
     },
     {
       "name": "Empty polygon relation",
-      "sql": "SELECT count(*) FROM lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input() WHERE false))",
+      "sql": "WITH site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, 500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY))) SELECT count(*) FROM lidar.main.height_metrics((SELECT * FROM site WHERE false))",
       "rows": [
         [
           0
@@ -46,7 +37,7 @@
     },
     {
       "name": "Multiple conductor batches",
-      "sql": "SELECT count(*), min(clearance_m), max(clearance_m) FROM lidar.main.vegetation_clearance((SELECT i::VARCHAR feature_id, geometry_wkb FROM lidar.main.demo_input(kind := 'conductor') CROSS JOIN range(2501) t(i)))",
+      "sql": "WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))) SELECT count(*), min(clearance_m), max(clearance_m) FROM lidar.main.vegetation_clearance((SELECT i::VARCHAR feature_id, geometry_wkb FROM conductor CROSS JOIN range(2501) t(i)))",
       "rows": [
         [
           2501,
@@ -57,7 +48,7 @@
     },
     {
       "name": "Prioritize vegetation clearance by asset owner",
-      "sql": "WITH assets(feature_id, circuit_name) AS (VALUES ('line', 'Circuit 12')),\nconflicts AS (SELECT * FROM lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor'))))\nSELECT a.circuit_name, count(*) AS vegetation_returns, round(min(c.clearance_m), 2) AS closest_m\nFROM conflicts c JOIN assets a USING(feature_id) GROUP BY a.circuit_name ORDER BY a.circuit_name",
+      "sql": "WITH conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z (500025 4100030 120, 500040 4100030 120)'::GEOMETRY))),\nassets(feature_id, circuit_name) AS (VALUES ('line', 'Circuit 12')),\nconflicts AS (SELECT * FROM lidar.main.vegetation_clearance((SELECT * FROM conductor)))\nSELECT a.circuit_name, count(*) AS vegetation_returns, round(min(c.clearance_m), 2) AS closest_m\nFROM conflicts c JOIN assets a USING(feature_id) GROUP BY a.circuit_name ORDER BY a.circuit_name",
       "rows": [
         [
           "Circuit 12",

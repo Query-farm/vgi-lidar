@@ -7,14 +7,14 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property
 from itertools import pairwise
-from typing import Annotated, Any, ClassVar
+from typing import Annotated, Any
 
 import laspy
 import numpy as np
 import pyarrow as pa
 import shapely
 from scipy.spatial import cKDTree
-from shapely.geometry import LineString, box
+from shapely.geometry import box
 from vgi import Arg
 from vgi.arguments import TableInput
 from vgi.catalog import Table
@@ -23,12 +23,8 @@ from vgi.table_function import (
     BindParams,
     OutputCollector,
     ProcessParams,
-    TableFunctionGenerator,
-    bind_fixed_schema,
-    init_single_worker,
 )
 from vgi.table_in_out_function import TableInOutGenerator
-from vgi_rpc import ArrowSerializableDataclass
 
 from .support import (
     emit_rows,
@@ -51,12 +47,6 @@ GIS_DESCRIPTION = (
     "Inputs and outputs retain caller feature IDs; horizontal coordinates and "
     "elevations must be metres. "
     "This worker uses existing ASPRS classifications: ground=2, vegetation=3/4/5, buildings=6."
-)
-INPUT = schema_of(
-    [
-        ("feature_id", pa.string(), "Caller-owned area or conductor identity."),
-        ("geometry_wkb", pa.binary(), "Area polygon or 3D conductor LineString in geometry_crs."),
-    ]
 )
 METRICS = schema_of(
     [
@@ -381,36 +371,49 @@ class CloudArgs:
     ]
 
 
+# Inline sample geometry over the bundled demo://classified.laz cloud (EPSG:32618, flat
+# ground at 100 m): a 50 x 50 m site polygon and a 3D conductor at 120 m in the same
+# synthetic vertical datum. Plain VALUES rows keep the examples free of helper functions.
+SITE_CTE = (
+    "site(feature_id, geometry_wkb) AS (VALUES ('site', ST_AsWKB('POLYGON ((499995 4099995, "
+    "500045 4099995, 500045 4100045, 499995 4100045, 499995 4099995))'::GEOMETRY)))"
+)
+CONDUCTOR_CTE = (
+    "conductor(feature_id, geometry_wkb) AS (VALUES ('line', ST_AsWKB('LINESTRING Z "
+    "(500025 4100030 120, 500040 4100030 120)'::GEOMETRY)))"
+)
+
 HEIGHT_SQL = (
+    f"WITH {SITE_CTE} "
     "SELECT feature_id, round(building_p95_m, 1), canopy_max_m FROM "
-    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input())) ORDER BY "
-    "feature_id"
+    "lidar.main.height_metrics((SELECT * FROM site)) ORDER BY feature_id"
 )
 CLEAR_SQL = (
+    f"WITH {CONDUCTOR_CTE} "
     "SELECT feature_id, round(clearance_m, 2) FROM "
-    "lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := "
-    "'conductor'))) ORDER BY feature_id, point_index"
+    "lidar.main.vegetation_clearance((SELECT * FROM conductor)) ORDER BY feature_id, point_index"
 )
 
 # Composed examples: each combines several of this worker's functions in one query.
 SPAN_REPORT_SQL = (
-    "WITH spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), "
+    f"WITH {SITE_CTE}, {CONDUCTOR_CTE}, "
+    "spans(span_id, corridor_id, conductor_id) AS (VALUES ('Span 7', 'site', 'line')), "
     "canopy AS (SELECT feature_id, canopy_max_m, canopy_cover_fraction FROM "
-    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), "
+    "lidar.main.height_metrics((SELECT * FROM site))), "
     "returns AS (SELECT feature_id, count(*) FILTER (WHERE clearance_m <= 3) AS within_3m, "
     "count(*) AS within_12m, min(clearance_m) AS closest_m FROM "
-    "lidar.main.vegetation_clearance((SELECT * FROM lidar.main.demo_input(kind := 'conductor')), "
-    "clearance_m := 12) GROUP BY feature_id) "
+    "lidar.main.vegetation_clearance((SELECT * FROM conductor), clearance_m := 12) GROUP BY feature_id) "
     "SELECT s.span_id, c.canopy_max_m, round(c.canopy_cover_fraction, 3) AS canopy_cover, "
     "coalesce(r.within_3m, 0) AS within_3m, coalesce(r.within_12m, 0) AS within_12m, "
     "round(r.closest_m, 2) AS closest_m FROM spans s JOIN canopy c ON c.feature_id = s.corridor_id "
     "LEFT JOIN returns r ON r.feature_id = s.conductor_id ORDER BY s.span_id"
 )
 TALL_CANOPY_SQL = (
-    "WITH any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM "
-    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()))), "
+    f"WITH {SITE_CTE}, "
+    "any_canopy AS (SELECT feature_id, canopy_cover_fraction AS cover_2m FROM "
+    "lidar.main.height_metrics((SELECT * FROM site))), "
     "tall AS (SELECT feature_id, canopy_cover_fraction AS cover_15m FROM "
-    "lidar.main.height_metrics((SELECT * FROM lidar.main.demo_input()), canopy_height_m := 15)) "
+    "lidar.main.height_metrics((SELECT * FROM site), canopy_height_m := 15)) "
     "SELECT feature_id, round(cover_2m, 3) AS cover_2m, round(cover_15m, 3) AS cover_15m, "
     "round(cover_15m / cover_2m, 2) AS tall_share FROM any_canopy JOIN tall USING (feature_id) "
     "ORDER BY feature_id"
@@ -512,79 +515,6 @@ class VegetationClearance(TableInOutGenerator[CloudArgs]):
         )
 
 
-@dataclass(slots=True, frozen=True, kw_only=True)
-class DemoArgs:
-    """Select the bundled area or conductor input."""
-
-    kind: Annotated[
-        str,
-        Arg(
-            "kind",
-            default="area",
-            choices=["area", "conductor"],
-            doc="Return a polygon for height metrics or a 3D line for clearance.",
-        ),
-    ]
-
-
-@dataclass(kw_only=True)
-class Cursor(ArrowSerializableDataclass):
-    """Demo emission flag."""
-
-    done: bool = False
-
-
-DEMO_SQL = "SELECT feature_id FROM lidar.main.demo_input()"
-
-
-@init_single_worker
-@bind_fixed_schema
-class DemoInput(TableFunctionGenerator[DemoArgs, Cursor]):
-    """Supply synthetic site and conductor geometry."""
-
-    FIXED_SCHEMA: ClassVar[pa.Schema] = INPUT
-
-    class Meta:
-        """Demo fixture metadata."""
-
-        name = "demo_input"
-        description = "Synthetic site polygon or 3D conductor for the bundled classified cloud"
-        tags = metadata(
-            "Demo LiDAR geometry",
-            "Return a site polygon or, with kind := 'conductor', a 3D line in EPSG:32618. Both "
-            "overlay demo://classified.laz, whose flat ground is at 100 m and conductor at 120 "
-            "m in a synthetic common vertical datum.",
-            INPUT,
-            DEMO_SQL,
-            [["site"]],
-        )
-        examples = example(DEMO_SQL, "Inspect the bundled site identity")
-
-    @classmethod
-    def initial_state(cls, params: ProcessParams[DemoArgs]) -> Cursor:
-        """Start before the fixture row."""
-        return Cursor()
-
-    @classmethod
-    def process(cls, params: ProcessParams[DemoArgs], state: Cursor, out: OutputCollector) -> None:
-        """Emit the selected fixture once."""
-        if state.done:
-            out.finish()
-            return
-        area = params.args.kind == "area"
-        geom = (
-            box(499995, 4099995, 500045, 4100045)
-            if area
-            else LineString([(500025, 4100030, 120), (500040, 4100030, 120)])
-        )
-        out.emit(
-            pa.RecordBatch.from_pylist(
-                [{"feature_id": "site" if area else "line", "geometry_wkb": geom.wkb}], schema=params.output_schema
-            )
-        )
-        state.done = True
-
-
-GIS_FUNCTIONS: list[type[Any]] = [DemoInput, HeightMetrics, VegetationClearance]
+GIS_FUNCTIONS: list[type[Any]] = [HeightMetrics, VegetationClearance]
 
 GIS_TABLES: list[Table] = []

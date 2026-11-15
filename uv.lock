@@ -1123,7 +1123,7 @@ wheels = [
 
 [[package]]
 name = "vgi-lidar-worker"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "laspy", extra = ["lazrs"] },
