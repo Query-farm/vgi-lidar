@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Docs link to upstream sources: the catalog `vgi.doc_md` gains a Sources and references section linking the ASPRS LAS specification (and its OGC listing), laspy, LASzip, SciPy cKDTree and Shapely (VGI183).
+
 ## 0.2.0 (2026-11-14)
 
 - Removed the starter template's demo schema (examples.greet/fetch_items/sequence_table), demo_input and the placeholder lidar_api secret type. The worker now exposes only `main.height_metrics` and `main.vegetation_clearance` and declares no credentials.

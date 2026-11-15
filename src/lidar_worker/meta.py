@@ -31,6 +31,20 @@ SCHEMA_CATEGORIES = [
 ]
 
 
+# Upstream specs, data providers and libraries the catalog docs link to (VGI183).
+CATALOG_REFERENCES_MD = (
+    "\n\n## Sources and references\n\n"
+    "- [ASPRS LAS specification](https://github.com/ASPRSorg/LAS) (also published as an "
+    "[OGC community standard](https://www.ogc.org/standards/las/)): the point-cloud format and the "
+    "ground/vegetation/building classification codes this worker relies on.\n"
+    "- [laspy](https://laspy.readthedocs.io/): reads LAS files, with [LASzip](https://laszip.org/)-compatible "
+    "LAZ decompression via lazrs.\n"
+    "- [SciPy cKDTree](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html): "
+    "the nearest-neighbour index behind ground lookup and clearance searches.\n"
+    "- [Shapely](https://shapely.readthedocs.io/): polygon and power-line geometry operations."
+)
+
+
 def keywords_array(keywords: str) -> str:
     """Turn ``"a, b, c"`` into the JSON array string ``vgi.keywords`` requires."""
     return json.dumps([k.strip() for k in keywords.split(",") if k.strip()])
