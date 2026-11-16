@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 (2026-11-16)
+
+- Require vgi-python `>=0.52.2,<0.53`; uv.lock re-locked.
+- Move to Python 3.14: `requires-python >=3.14`, CI, the Docker image and lint tooling target 3.14.
+
 ## 0.2.1
 
 - Docs link to upstream sources: the catalog `vgi.doc_md` gains a Sources and references section linking the ASPRS LAS specification (and its OGC listing), laspy, LASzip, SciPy cKDTree and Shapely (VGI183).
